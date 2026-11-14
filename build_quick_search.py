@@ -14,15 +14,30 @@ if not os.path.isfile(EXT_SOURCE):
 
 NAME = 'quick_search'
 SHORTCUT = 'ctrl.tab'
+CONNECT_SHORTCUT = 'shift.tab'
 FAMILIES = ['COMP', 'TOP', 'CHOP', 'SOP', 'POP', 'MAT', 'DAT']
 MAX_ROWS = 8
 WIDTH, SEARCH_H, TAGS_H, ROW_H = 364, 32, 24, 24
 
 old = op('/' + NAME)
+settings = {}
 if old:
+	# keep the user's settings across a rebuild
+	settings = {p.name: p.eval() for p in old.customPars}
 	old.destroy()
 q = op('/').create(baseCOMP, NAME)
 q.nodeX, q.nodeY = 0, -400
+
+page = q.appendCustomPage('Quick Search')
+p = page.appendStr('Shortcut', label='Shortcut')[0]
+p.default = p.val = SHORTCUT
+p.help = 'Key that opens the popup, e.g. ctrl.tab'
+p = page.appendStr('Connectshortcut', label='Connect Shortcut')[0]
+p.default = p.val = CONNECT_SHORTCUT
+p.help = 'Key that opens the popup and wires the current operator (green outline) into the new one.'
+for name, value in settings.items():
+	if hasattr(q.par, name):
+		q.par[name] = value
 
 
 def styleText(t, size, alignx='left', pad=10):
@@ -138,7 +153,7 @@ win.par.cursorvisible = 'alwaysvisible'
 # does not handle itself are listened to
 kb = q.create(keyboardinDAT, 'keyboardin1')
 kb.nodeX, kb.nodeY = -400, -200
-kb.par.shortcuts = SHORTCUT
+kb.par.shortcuts.expr = "parent.QuickSearch.par.Shortcut + ' ' + parent.QuickSearch.par.Connectshortcut"
 kb.par.keys = 'up down left right esc'
 kcb = q.create(textDAT, 'keyboard_callbacks')
 kcb.nodeX, kcb.nodeY = -200, -200
@@ -147,7 +162,7 @@ kcb.text = '''def onKey(dat, key, character, alt, lAlt, rAlt, ctrl, lCtrl, rCtrl
 	return
 
 def onShortcut(dat, shortcutName, time, *args, **kwargs):
-	parent.QuickSearch.Toggle()
+	parent.QuickSearch.OnShortcut(shortcutName)
 	return
 '''
 kb.par.callbacks = 'keyboard_callbacks'

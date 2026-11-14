@@ -5,6 +5,9 @@ Ctrl+Tab in a network editor opens a one-line search bar at the mouse.
 Type 2+ characters to list matching operators. Up/Down picks a name,
 Left/Right (or Tab / Shift+Tab) picks a family, Enter places the node
 at the position the mouse had when the popup was opened.
+
+Shift+Tab opens it in connect mode: the new operator is wired to the
+current operator and placed to its right.
 """
 
 import ctypes
@@ -26,6 +29,13 @@ TAG_DIM_FONT = (0.36, 0.36, 0.36)
 FALLBACK_COLOR = (0.35, 0.35, 0.35)
 
 VK_SHIFT = 0x10
+PLACEHOLDER = 'Search operators...'
+
+# Connect mode puts the new operator beside its source. 70 is the gap the
+# native OP Create dialog leaves when it chains operators (200 unit steps for
+# 130 unit wide nodes).
+GAP_X = 70
+GAP_Y = 40
 
 
 def cursorPos():
@@ -58,6 +68,7 @@ class QuickSearchExt:
 		self.target = None
 		self.nodePos = (0, 0)
 		self.screenPos = (0, 0)
+		self.source = None
 		self.index = []
 		self.buildIndex()
 
@@ -122,18 +133,28 @@ class QuickSearchExt:
 
 	# ------------------------------------------------------ open / close
 
-	def Toggle(self):
+	def OnShortcut(self, name):
 		# trust the window, not the flag: if the window went away by any
 		# other route the shortcut must still open the popup
-		if self.isOpen and self.window.isOpen:
+		isOpen = self.isOpen and self.window.isOpen
+		if name == self.ownerComp.par.Connectshortcut.eval().strip():
+			# while the popup is open this key belongs to the search field
+			# (the default, Shift+Tab, steps back through the families)
+			if not isOpen:
+				self.Open(connect=True)
+		elif isOpen:
 			self.Close()
 		else:
 			self.Open()
 
-	def Open(self):
+	def Open(self, connect=False):
 		pane = ui.panes.current
 		if pane is None or pane.type != PaneType.NETWORKEDITOR:
 			return
+		# connect mode: the new operator takes the current operator (the one
+		# with the green outline) as its input
+		current = pane.owner.currentChild if connect else None
+		self.source = current if current and current.family in FAMILIES else None
 		mx, my = cursorPos()
 		bl, tr = pane.bottomLeft, pane.topRight
 		# mouse (desktop pixels) -> network units; 8 = window frame thickness
@@ -145,6 +166,11 @@ class QuickSearchExt:
 
 		selected = [c for c in self.target.selectedChildren if c.family in FAMILIES]
 		self.preferred = selected[0].family if selected else self.lastFamily
+		if self.source:
+			self.preferred = self.source.family
+			self.search.par.placeholdertext = 'Connect from %s...' % self.source.name
+		else:
+			self.search.par.placeholdertext = PLACEHOLDER
 		self.query = ''
 		self.results = []
 		self.rowIndex = 0
@@ -269,6 +295,23 @@ class QuickSearchExt:
 
 	# ------------------------------------------------------------ place
 
+	def placeBeside(self, node, source):
+		"""Put node to the right of source, level with it.
+
+		If that spot is taken (a second branch from the same operator), step
+		down until the node overlaps nothing.
+		"""
+		x = source.nodeX + source.nodeWidth + GAP_X
+		y = source.nodeCenterY - node.nodeHeight / 2
+		others = [c for c in self.target.children if c is not node]
+		for _ in range(50):
+			if not any(x < c.nodeX + c.nodeWidth and c.nodeX < x + node.nodeWidth
+					and y < c.nodeY + c.nodeHeight and c.nodeY < y + node.nodeHeight
+					for c in others):
+				break
+			y -= node.nodeHeight + GAP_Y
+		node.nodeX, node.nodeY = x, y
+
 	def Place(self):
 		if not self.results or self.family is None or self.target is None:
 			return
@@ -277,8 +320,15 @@ class QuickSearchExt:
 		ui.undo.startBlock('Quick Search: %s %s' % (entry['label'], self.family))
 		try:
 			node = self.target.create(cls)
-			node.nodeCenterX, node.nodeCenterY = self.nodePos
 			node.viewer = True
+			source = self.source if self.source and self.source.valid else None
+			if source:
+				self.placeBeside(node, source)
+				if (source.family == node.family
+						and source.outputConnectors and node.inputConnectors):
+					node.inputConnectors[0].connect(source.outputConnectors[0])
+			else:
+				node.nodeCenterX, node.nodeCenterY = self.nodePos
 			for c in self.target.selectedChildren:
 				c.selected = False
 			node.selected = True
