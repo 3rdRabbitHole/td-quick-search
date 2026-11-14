@@ -16,15 +16,25 @@ letters, press Enter: the operator is created where the mouse was.
 
 ## 安裝 / Install
 
-1. 下載這個資料夾。
-2. 在 TouchDesigner 開啟 Textport(Alt+T),執行下面這行,把 `<path>` 換成資料夾路徑:
+下載 [`quick_search.tox`](quick_search.tox),拖進 TouchDesigner 專案的**根層**(`/`)即可。
+不需要其他檔案。
 
-   ```python
-   src = r'<path>'; exec(open(src + '/build_quick_search.py', encoding='utf-8').read())
-   ```
+Download [`quick_search.tox`](quick_search.tox) and drop it into the root (`/`) of your
+project. Nothing else is needed.
 
-這會在專案根層建立 `/quick_search` 元件。元件建好後不再依賴這些檔案,
-可以另存成 `.tox`,拖進其他專案的根層使用。重新執行同一行會重建元件。
+元件是存在專案檔裡的,所以每個要用的專案都要放一次。
+
+### 從原始碼建置 / Build from source
+
+想修改程式的話,`quick_search.tox` 是由 `build_quick_search.py` 和 `QuickSearchExt.py` 產生的。
+在 Textport(Alt+T)執行下面這行,把 `<path>` 換成這個資料夾的路徑:
+
+```python
+src = r'<path>'; exec(open(src + '/build_quick_search.py', encoding='utf-8').read())
+```
+
+這會在專案根層重建 `/quick_search` 元件(原本的快捷鍵設定會保留)。
+在元件上按右鍵選 *Save Component .tox* 就能存成新的 tox。
 
 ## 使用方式 / Usage
 
@@ -70,7 +80,7 @@ letters, press Enter: the operator is created where the mouse was.
 | `QuickSearchExt.py` | `MAX_ROWS` | `8` | 最多顯示幾列結果(兩個檔案裡的值要一致) |
 
 元件參數在 `/quick_search` 的 Quick Search 頁面直接修改,重建時會保留。
-`.py` 裡的設定修改後,重新執行安裝那一行即可。
+`.py` 裡的設定修改後,要照上面「從原始碼建置」重建元件。
 
 ## 運作方式 / How it works
 

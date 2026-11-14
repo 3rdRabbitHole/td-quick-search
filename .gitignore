@@ -1,6 +1,5 @@
 # TouchDesigner project files, built components and backups
 *.toe
-*.tox
 Backup/
 CrashAutoSave.*
 
