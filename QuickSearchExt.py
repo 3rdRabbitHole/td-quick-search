@@ -47,7 +47,9 @@ def cursorPos():
 
 
 def shiftDown():
-	return ctypes.windll.user32.GetKeyState(VK_SHIFT) < 0
+	# The physical key state right now. The result is a 16-bit value whose
+	# top bit means "down"; test that bit, the sign is not reliable here.
+	return bool(ctypes.windll.user32.GetAsyncKeyState(VK_SHIFT) & 0x8000)
 
 
 class QuickSearchExt:
