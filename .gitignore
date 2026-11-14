@@ -1,0 +1,14 @@
+# TouchDesigner project files, built components and backups
+*.toe
+*.tox
+Backup/
+CrashAutoSave.*
+
+# Python / OS / editor noise
+__pycache__/
+*.pyc
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+.claude/
