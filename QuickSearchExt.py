@@ -7,6 +7,9 @@ Left/Right (or Tab / Shift+Tab) picks a family, Enter places the node
 at the position the mouse had when the popup was opened.
 """
 
+import ctypes
+from ctypes import wintypes
+
 FAMILIES = ['COMP', 'TOP', 'CHOP', 'SOP', 'POP', 'MAT', 'DAT']
 MAX_ROWS = 8
 MIN_CHARS = 2
@@ -22,6 +25,20 @@ TAG_DIM_BG = (0.13, 0.13, 0.13)
 TAG_DIM_FONT = (0.36, 0.36, 0.36)
 FALLBACK_COLOR = (0.35, 0.35, 0.35)
 
+VK_SHIFT = 0x10
+
+
+def cursorPos():
+	"""Mouse position in TouchDesigner's desktop pixels (origin bottom-left)."""
+	pt = wintypes.POINT()
+	ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+	primary = next((m for m in monitors if m.isPrimary), monitors[0])
+	return pt.x, primary.top + primary.bottom - pt.y
+
+
+def shiftDown():
+	return ctypes.windll.user32.GetKeyState(VK_SHIFT) < 0
+
 
 class QuickSearchExt:
 
@@ -30,7 +47,6 @@ class QuickSearchExt:
 		self.popup = ownerComp.op('popup')
 		self.search = ownerComp.op('popup/search')
 		self.window = ownerComp.op('window1')
-		self.mouse = ownerComp.op('mousein1')
 		self.query = ''
 		self.results = []
 		self.rowIndex = 0
@@ -38,7 +54,6 @@ class QuickSearchExt:
 		self.preferred = None
 		self.lastFamily = 'TOP'
 		self.isOpen = False
-		self.shiftDown = False
 		self.session = 0
 		self.target = None
 		self.nodePos = (0, 0)
@@ -108,7 +123,9 @@ class QuickSearchExt:
 	# ------------------------------------------------------ open / close
 
 	def Toggle(self):
-		if self.isOpen:
+		# trust the window, not the flag: if the window went away by any
+		# other route the shortcut must still open the popup
+		if self.isOpen and self.window.isOpen:
 			self.Close()
 		else:
 			self.Open()
@@ -117,7 +134,7 @@ class QuickSearchExt:
 		pane = ui.panes.current
 		if pane is None or pane.type != PaneType.NETWORKEDITOR:
 			return
-		mx, my = self.mouse['tx'].eval(), self.mouse['ty'].eval()
+		mx, my = cursorPos()
 		bl, tr = pane.bottomLeft, pane.topRight
 		# mouse (desktop pixels) -> network units; 8 = window frame thickness
 		cx = ui.windowX + 8 + (bl.x + tr.x) / 2
@@ -173,7 +190,7 @@ class QuickSearchExt:
 		elif reason == 'escape':
 			self.Close()
 		elif reason == 'tab':
-			self.cycleFamily(-1 if self.shiftDown else 1)
+			self.cycleFamily(-1 if shiftDown() else 1)
 			self.focusSearch()
 		else:
 			# clicked somewhere else; give a click on a row or tag the
@@ -186,11 +203,12 @@ class QuickSearchExt:
 
 	# ------------------------------------------------------------- keys
 
-	def OnKey(self, key, shift, state):
-		self.shiftDown = bool(shift)
+	def OnKey(self, key, state):
 		if not self.isOpen or not state:
 			return
-		if key == 'up':
+		if key == 'esc':
+			self.Close()
+		elif key == 'up':
 			self.moveRow(-1)
 		elif key == 'down':
 			self.moveRow(1)
@@ -260,6 +278,7 @@ class QuickSearchExt:
 		try:
 			node = self.target.create(cls)
 			node.nodeCenterX, node.nodeCenterY = self.nodePos
+			node.viewer = True
 			for c in self.target.selectedChildren:
 				c.selected = False
 			node.selected = True

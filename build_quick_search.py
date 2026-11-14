@@ -46,16 +46,6 @@ ext = q.create(textDAT, 'QuickSearchExt')
 ext.text = open(EXT_SOURCE, encoding='utf-8').read()
 ext.nodeX, ext.nodeY = -400, 200
 
-# mouse position in desktop pixels, kept cooking by a CHOP Execute
-mi = q.create(mouseinCHOP, 'mousein1')
-mi.par.output = 'absolute'
-mi.nodeX, mi.nodeY = -400, 0
-ce = q.create(chopexecuteDAT, 'keep_mouse_cooking')
-ce.par.chop = 'mousein1'
-ce.par.valuechange = True
-ce.text = 'def onValueChange(channel, sampleIndex, val, prev):\n\treturn\n'
-ce.nodeX, ce.nodeY = -200, 0
-
 # popup panel
 popup = q.create(containerCOMP, 'popup')
 popup.nodeX, popup.nodeY = 0, 200
@@ -144,14 +134,16 @@ win.par.size = 'custom'
 win.par.winw, win.par.winh = WIDTH, SEARCH_H + TAGS_H
 win.par.cursorvisible = 'alwaysvisible'
 
-# keyboard: the shortcut opens the popup, arrow keys navigate while open
+# keyboard: the shortcut opens the popup; only the keys the search field
+# does not handle itself are listened to
 kb = q.create(keyboardinDAT, 'keyboardin1')
 kb.nodeX, kb.nodeY = -400, -200
 kb.par.shortcuts = SHORTCUT
+kb.par.keys = 'up down left right esc'
 kcb = q.create(textDAT, 'keyboard_callbacks')
 kcb.nodeX, kcb.nodeY = -200, -200
 kcb.text = '''def onKey(dat, key, character, alt, lAlt, rAlt, ctrl, lCtrl, rCtrl, shift, lShift, rShift, state, time, *args, **kwargs):
-	parent.QuickSearch.OnKey(key, shift, state)
+	parent.QuickSearch.OnKey(key, state)
 	return
 
 def onShortcut(dat, shortcutName, time, *args, **kwargs):
