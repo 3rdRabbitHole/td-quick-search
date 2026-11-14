@@ -189,6 +189,11 @@ class QuickSearchExt:
 		# The search field must own the keyboard: while it is being edited
 		# TouchDesigner routes keys to it instead of the network editor, so
 		# typing does not trigger network shortcuts (delete, bypass, Tab...).
+		#
+		# Take it right away: delayed runs never fire while the timeline is
+		# paused, so nothing here may depend on one. The delayed call is only
+		# a second attempt for when the first came too early.
+		self.search.setKeyboardFocus()
 		run("args[0].focusNow(args[1])", self, self.session, delayFrames=delayFrames)
 
 	def focusNow(self, session):
@@ -218,19 +223,28 @@ class QuickSearchExt:
 		elif reason == 'tab':
 			self.cycleFamily(-1 if shiftDown() else 1)
 			self.focusSearch()
-		else:
-			# clicked somewhere else; give a click on a row or tag the
-			# chance to place the node before closing
-			run("args[0].closeIfSession(args[1])", self, self.session, delayFrames=5)
-
-	def closeIfSession(self, session):
-		if self.isOpen and session == self.session:
+		elif not self.cursorInPopup():
+			# clicked somewhere else
 			self.Close()
+		# else: a click on a row or tag, which OnRowClick / OnTagClick handle
+
+	def cursorInPopup(self):
+		mx, my = cursorPos()
+		left, top = self.screenPos
+		return left <= mx <= left + WIDTH and top - self.popup.par.h.eval() <= my <= top
 
 	# ------------------------------------------------------------- keys
 
 	def OnKey(self, key, state):
-		if not self.isOpen or not state:
+		if not self.isOpen:
+			return
+		if key == 'tab':
+			# Tab ends the edit; once the key is released the field can
+			# take the focus back
+			if not state:
+				self.search.setKeyboardFocus()
+			return
+		if not state:
 			return
 		if key == 'esc':
 			self.Close()
