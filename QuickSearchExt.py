@@ -11,7 +11,9 @@ current operator and placed to its right.
 """
 
 import ctypes
-from ctypes import wintypes
+import sys
+
+IS_MAC = sys.platform == 'darwin'
 
 FAMILIES = ['COMP', 'TOP', 'CHOP', 'SOP', 'POP', 'MAT', 'DAT']
 MAX_ROWS = 8
@@ -38,18 +40,70 @@ GAP_X = 70
 GAP_Y = 40
 
 
-def cursorPos():
-	"""Mouse position in TouchDesigner's desktop pixels (origin bottom-left)."""
-	pt = wintypes.POINT()
-	ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
-	primary = next((m for m in monitors if m.isPrimary), monitors[0])
-	return pt.x, primary.top + primary.bottom - pt.y
+# The mouse position and the Shift key are read from the operating system:
+# TouchDesigner's own mouse values lag behind, and the popup must open where
+# the mouse is right now.
+if IS_MAC:
+	from ctypes import util
 
+	class _CGPoint(ctypes.Structure):
+		_fields_ = [('x', ctypes.c_double), ('y', ctypes.c_double)]
 
-def shiftDown():
-	# The physical key state right now. The result is a 16-bit value whose
-	# top bit means "down"; test that bit, the sign is not reliable here.
-	return bool(ctypes.windll.user32.GetAsyncKeyState(VK_SHIFT) & 0x8000)
+	class _CGRect(ctypes.Structure):
+		_fields_ = [('x', ctypes.c_double), ('y', ctypes.c_double),
+			('w', ctypes.c_double), ('h', ctypes.c_double)]
+
+	_cg = ctypes.CDLL(util.find_library('CoreGraphics'))
+	_cf = ctypes.CDLL(util.find_library('CoreFoundation'))
+	_cg.CGEventCreate.restype = ctypes.c_void_p
+	_cg.CGEventCreate.argtypes = [ctypes.c_void_p]
+	_cg.CGEventGetLocation.restype = _CGPoint
+	_cg.CGEventGetLocation.argtypes = [ctypes.c_void_p]
+	_cg.CGMainDisplayID.restype = ctypes.c_uint32
+	_cg.CGDisplayBounds.restype = _CGRect
+	_cg.CGDisplayBounds.argtypes = [ctypes.c_uint32]
+	_cg.CGEventSourceFlagsState.restype = ctypes.c_uint64
+	_cg.CGEventSourceFlagsState.argtypes = [ctypes.c_int32]
+	_cf.CFRelease.argtypes = [ctypes.c_void_p]
+
+	HID_STATE = 1         # kCGEventSourceStateHIDSystemState: the physical keys
+	SHIFT_MASK = 0x20000  # kCGEventFlagMaskShift
+
+	# macOS windows have no frame around the content
+	FRAME = 0
+
+	def cursorPos():
+		"""Mouse position in points, origin bottom-left of the main display.
+
+		On macOS TouchDesigner places its windows and panes in points, not
+		pixels, so the Retina scale never enters into it.
+		"""
+		event = _cg.CGEventCreate(None)
+		pt = _cg.CGEventGetLocation(event)
+		_cf.CFRelease(event)
+		# Quartz counts y down from the top of the main display
+		return pt.x, _cg.CGDisplayBounds(_cg.CGMainDisplayID()).h - pt.y
+
+	def shiftDown():
+		return bool(_cg.CGEventSourceFlagsState(HID_STATE) & SHIFT_MASK)
+
+else:
+	from ctypes import wintypes
+
+	# thickness of the window frame, in pixels
+	FRAME = 8
+
+	def cursorPos():
+		"""Mouse position in TouchDesigner's desktop pixels (origin bottom-left)."""
+		pt = wintypes.POINT()
+		ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+		primary = next((m for m in monitors if m.isPrimary), monitors[0])
+		return pt.x, primary.top + primary.bottom - pt.y
+
+	def shiftDown():
+		# The physical key state right now. The result is a 16-bit value whose
+		# top bit means "down"; test that bit, the sign is not reliable here.
+		return bool(ctypes.windll.user32.GetAsyncKeyState(VK_SHIFT) & 0x8000)
 
 
 class QuickSearchExt:
@@ -159,9 +213,9 @@ class QuickSearchExt:
 		self.source = current if current and current.family in FAMILIES else None
 		mx, my = cursorPos()
 		bl, tr = pane.bottomLeft, pane.topRight
-		# mouse (desktop pixels) -> network units; 8 = window frame thickness
-		cx = ui.windowX + 8 + (bl.x + tr.x) / 2
-		cy = ui.windowY + 8 + (bl.y + tr.y) / 2
+		# mouse (desktop units) -> network units
+		cx = ui.windowX + FRAME + (bl.x + tr.x) / 2
+		cy = ui.windowY + FRAME + (bl.y + tr.y) / 2
 		self.nodePos = (pane.x + (mx - cx) / pane.zoom, pane.y + (my - cy) / pane.zoom)
 		self.screenPos = (mx, my)
 		self.target = pane.owner
@@ -232,6 +286,12 @@ class QuickSearchExt:
 
 	def cursorInPopup(self):
 		mx, my = cursorPos()
+		if IS_MAC:
+			# The mouse is reported in fractions of a point, but the window
+			# is placed on whole points: right after opening, the mouse sits
+			# just outside it. Test against where the window really is.
+			w = self.window
+			return w.x <= mx < w.x + w.width and w.y <= my < w.y + w.height
 		left, top = self.screenPos
 		return left <= mx <= left + WIDTH and top - self.popup.par.h.eval() <= my <= top
 
