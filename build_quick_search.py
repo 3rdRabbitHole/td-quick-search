@@ -13,7 +13,11 @@ if not os.path.isfile(EXT_SOURCE):
 	raise FileNotFoundError("QuickSearchExt.py not found in %r - set src to this script's folder" % SRC_DIR)
 
 NAME = 'quick_search'
-SHORTCUT = 'ctrl.tab'
+# One .tox serves both systems, so the Shortcut parameter is left empty by
+# default and the keyboard DAT picks the key for the system it runs on.
+# Cmd+Tab and Alt+Tab belong to the system on macOS and Windows, and
+# TouchDesigner never sees Tab while Control is held on macOS.
+DEFAULT_SHORTCUT_EXPR = "('alt.tab' if app.osName == 'macOS' else 'ctrl.tab')"
 CONNECT_SHORTCUT = 'shift.tab'
 FAMILIES = ['COMP', 'TOP', 'CHOP', 'SOP', 'POP', 'MAT', 'DAT']
 MAX_ROWS = 8
@@ -22,16 +26,17 @@ WIDTH, SEARCH_H, TAGS_H, ROW_H = 364, 32, 24, 24
 old = op('/' + NAME)
 settings = {}
 if old:
-	# keep the user's settings across a rebuild
-	settings = {p.name: p.eval() for p in old.customPars}
+	# keep the user's settings across a rebuild; a parameter left at its
+	# default takes the new default
+	settings = {p.name: p.eval() for p in old.customPars if not p.isDefault}
 	old.destroy()
 q = op('/').create(baseCOMP, NAME)
 q.nodeX, q.nodeY = 0, -400
 
 page = q.appendCustomPage('Quick Search')
 p = page.appendStr('Shortcut', label='Shortcut')[0]
-p.default = p.val = SHORTCUT
-p.help = 'Key that opens the popup, e.g. ctrl.tab'
+p.default = p.val = ''
+p.help = 'Key that opens the popup, e.g. ctrl.tab. Leave empty for the default: ctrl.tab on Windows, alt.tab (Option+Tab) on macOS.'
 p = page.appendStr('Connectshortcut', label='Connect Shortcut')[0]
 p.default = p.val = CONNECT_SHORTCUT
 p.help = 'Key that opens the popup and wires the current operator (green outline) into the new one.'
@@ -153,7 +158,8 @@ win.par.cursorvisible = 'alwaysvisible'
 # does not handle itself are listened to
 kb = q.create(keyboardinDAT, 'keyboardin1')
 kb.nodeX, kb.nodeY = -400, -200
-kb.par.shortcuts.expr = "parent.QuickSearch.par.Shortcut + ' ' + parent.QuickSearch.par.Connectshortcut"
+kb.par.shortcuts.expr = ("(parent.QuickSearch.par.Shortcut.eval().strip() or " + DEFAULT_SHORTCUT_EXPR
+	+ ") + ' ' + parent.QuickSearch.par.Connectshortcut")
 kb.par.keys = 'up down left right esc tab'
 kcb = q.create(textDAT, 'keyboard_callbacks')
 kcb.nodeX, kcb.nodeY = -200, -200

@@ -12,7 +12,7 @@ TouchDesigner 的小型節點搜尋列。按快捷鍵、打幾個字、按 Enter
 - 一開始只有一行搜尋列和一排家族標籤
 - 支援縮寫:`mfi` 或 `m f i` 都能找到 Movie File In
 - 接線模式會把新節點接到目前節點,並排在它旁邊
-- 新建的節點可以用 Ctrl+Z 復原
+- 新建的節點可以用 Ctrl+Z 復原(macOS 為 Cmd+Z)
 - 節點清單直接讀自 TouchDesigner,新版本新增的節點不需要更新就會出現
 - 不更動內建的 OP Create 選單,Tab 和雙擊照常使用
 - 只有一個 `.tox`,沒有相依套件
@@ -23,7 +23,7 @@ TouchDesigner 的小型節點搜尋列。按快捷鍵、打幾個字、按 Enter
 
 元件是存在專案檔裡的,所以每個要用的專案都要放一次。
 
-**需求:** Windows。只在 TouchDesigner 2025.30000 系列測試過。
+**需求:** Windows 或 macOS。只在 TouchDesigner 2025.30000 系列測試過。
 
 ## 使用方式
 
@@ -31,7 +31,7 @@ TouchDesigner 的小型節點搜尋列。按快捷鍵、打幾個字、按 Enter
 
 | 按鍵 | 動作 |
 | --- | --- |
-| Ctrl+Tab | 開啟或關閉搜尋列 |
+| Ctrl+Tab(macOS 為 Option+Tab) | 開啟或關閉搜尋列 |
 | Shift+Tab | 以接線模式開啟 |
 | 打字 | 搜尋(2 個字以上) |
 | ↑ / ↓ | 選節點 |
@@ -72,15 +72,14 @@ Shift+Tab 會以目前節點(綠色外框的那個)作為來源:
 
 | 參數 | 預設 | |
 | --- | --- | --- |
-| Shortcut | `ctrl.tab` | 開啟搜尋列 |
+| Shortcut | 空白 | 開啟搜尋列。空白代表 `ctrl.tab`,macOS 為 `alt.tab` |
 | Connect Shortcut | `shift.tab` | 以接線模式開啟 |
 
 ## 已知限制
 
-- 僅支援 Windows。滑鼠位置和 Shift 鍵的狀態是透過 Windows API 讀取的,
-  所以目前的版本無法在 macOS 上執行。
-- 只在 100% 顯示縮放下測試過。
-- 一般模式的節點位置由滑鼠的螢幕座標換算,並假設視窗邊框為 8 像素。
+- Windows:只在 100% 顯示縮放下測試過。一般模式的節點位置由滑鼠的螢幕座標換算,
+  並假設視窗邊框為 8 像素。
+- macOS:只在一台 Mac 上測試過,包含內建 Retina 螢幕和一台外接螢幕。
 - 清單包含所有節點,不會依授權或作業系統過濾。
 - 接線模式只在同一個家族內,把第一個輸出接到第一個輸入,不會自動插入轉換節點。
 
@@ -92,7 +91,7 @@ Shift+Tab 會以目前節點(綠色外框的那個)作為來源:
 ## 從原始碼建置
 
 `quick_search.tox` 是由 `build_quick_search.py` 和 `QuickSearchExt.py` 產生的。
-要重建的話,在 Textport(Alt+T)執行下面這行,把 `<path>` 換成這個資料夾的路徑:
+要重建的話,在 Textport(Alt+T,或 Dialogs > Textport)執行下面這行,把 `<path>` 換成這個資料夾的路徑:
 
 ```python
 src = r'<path>'; exec(open(src + '/build_quick_search.py', encoding='utf-8').read())

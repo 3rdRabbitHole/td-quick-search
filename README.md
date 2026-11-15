@@ -13,7 +13,7 @@ family: the families that have it light up, and you step through only those.
 - Starts as a single search line with a row of family tags
 - Abbreviations: `mfi` or `m f i` finds Movie File In
 - Connect mode wires the new operator to the current one and places it beside it
-- New operators can be undone with Ctrl+Z
+- New operators can be undone with Ctrl+Z (Cmd+Z on macOS)
 - The operator list is read from TouchDesigner itself, so operators added in
   newer builds show up without an update
 - Leaves the built-in OP Create dialog alone: Tab and double-click work as before
@@ -26,7 +26,7 @@ of your project.
 
 The component is saved with the project, so add it to each project you want it in.
 
-**Requirements:** Windows. Tested on TouchDesigner 2025.30000 builds only.
+**Requirements:** Windows or macOS. Tested on TouchDesigner 2025.30000 builds only.
 
 ## Usage
 
@@ -34,7 +34,7 @@ With the mouse over a network editor:
 
 | Key | Action |
 | --- | --- |
-| Ctrl+Tab | Open or close the popup |
+| Ctrl+Tab (Option+Tab on macOS) | Open or close the popup |
 | Shift+Tab | Open in connect mode |
 | Type | Search (2 or more characters) |
 | ↑ / ↓ | Pick an operator |
@@ -79,16 +79,14 @@ On the component's **Quick Search** parameter page:
 
 | Parameter | Default | |
 | --- | --- | --- |
-| Shortcut | `ctrl.tab` | Opens the popup |
+| Shortcut | empty | Opens the popup. Empty means `ctrl.tab`, or `alt.tab` on macOS |
 | Connect Shortcut | `shift.tab` | Opens the popup in connect mode |
 
 ## Limitations
 
-- Windows only. The mouse position and the Shift key are read through the
-  Windows API, so the component does not run on macOS as it is.
-- Tested at 100% display scaling only.
-- In normal mode the position comes from the mouse's screen coordinates and
-  assumes an 8 pixel window frame.
+- Windows: tested at 100% display scaling only. In normal mode the position
+  comes from the mouse's screen coordinates and assumes an 8 pixel window frame.
+- macOS: tested on one Mac, with its Retina display and one external display.
 - The list has every operator; it is not filtered by licence or platform.
 - Connect mode wires first output to first input within one family. It does not
   insert converter operators.
@@ -102,7 +100,7 @@ it is MIT licensed, so fork it and make it yours.
 ## Building from source
 
 `quick_search.tox` is generated from `build_quick_search.py` and
-`QuickSearchExt.py`. To rebuild it, run this in the Textport (Alt+T), with
+`QuickSearchExt.py`. To rebuild it, run this in the Textport (Alt+T, or Dialogs > Textport), with
 `<path>` set to this folder:
 
 ```python
