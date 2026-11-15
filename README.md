@@ -79,7 +79,7 @@ On the component's **Quick Search** parameter page:
 
 | Parameter | Default | |
 | --- | --- | --- |
-| Shortcut | `ctrl.tab`, `alt.tab` on macOS | Opens the popup |
+| Shortcut | empty | Opens the popup. Empty means `ctrl.tab`, or `alt.tab` on macOS |
 | Connect Shortcut | `shift.tab` | Opens the popup in connect mode |
 
 ## Limitations

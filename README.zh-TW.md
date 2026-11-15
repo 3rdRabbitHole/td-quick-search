@@ -72,7 +72,7 @@ Shift+Tab 會以目前節點(綠色外框的那個)作為來源:
 
 | 參數 | 預設 | |
 | --- | --- | --- |
-| Shortcut | `ctrl.tab`,macOS 為 `alt.tab` | 開啟搜尋列 |
+| Shortcut | 空白 | 開啟搜尋列。空白代表 `ctrl.tab`,macOS 為 `alt.tab` |
 | Connect Shortcut | `shift.tab` | 以接線模式開啟 |
 
 ## 已知限制
