@@ -174,7 +174,14 @@ class QuickSearchExt:
 			i += 1
 		return True
 
-	def Search(self, query):
+	def Search(self, query, family=None):
+		"""Operators matching query, best first.
+
+		family: in connect mode, the source's family. Within each kind of
+		match, operators that family has come first, since only those can
+		be wired to the source. The others follow them, not filtered out,
+		though they can fall past MAX_ROWS.
+		"""
 		tokens = query.lower().split()
 		compactQuery = ''.join(tokens)
 		if len(compactQuery) < MIN_CHARS:
@@ -183,9 +190,10 @@ class QuickSearchExt:
 		for entry in self.index:
 			s = self.score(entry, tokens, compactQuery)
 			if s is not None:
-				found.append((s, len(entry['compact']), entry['label'], entry))
-		found.sort(key=lambda t: t[:3])
-		return [t[3] for t in found[:MAX_ROWS]]
+				other = bool(family) and family not in entry['fams']
+				found.append((s, other, len(entry['compact']), entry['label'], entry))
+		found.sort(key=lambda t: t[:4])
+		return [t[4] for t in found[:MAX_ROWS]]
 
 	# ------------------------------------------------------ open / close
 
@@ -262,7 +270,7 @@ class QuickSearchExt:
 		if not self.isOpen:
 			return
 		self.query = text
-		self.results = self.Search(text)
+		self.results = self.Search(text, self.source.family if self.source else None)
 		self.rowIndex = 0
 		self.Refresh()
 

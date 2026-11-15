@@ -48,7 +48,8 @@ you placed last.
 ### Search
 
 Matches at the start of the name come first, then the start of any word, then
-abbreviations, then anything containing what you typed.
+abbreviations, then anything containing what you typed. Connect mode also
+puts the source's family first (see below).
 
 ![Typing mov, then m f i, both find Movie File In](media/search-abbreviation.gif)
 
@@ -66,6 +67,10 @@ Shift+Tab uses the current operator (the one with the green outline) as the sour
 - its first output is wired to the new operator's first input
 - the new operator is placed to its right, or below that if the spot is taken
 - the family defaults to the source's family
+- results that come in the source's family are listed first: from an LFO CHOP,
+  `tr` puts Trim, Trail, Trigger and Transform ahead of Trig POP. How well a
+  name matches still comes first, and other families follow instead of being
+  filtered out
 - the new operator becomes the current one, so pressing Shift+Tab again
   continues the chain without reaching for the mouse
 
