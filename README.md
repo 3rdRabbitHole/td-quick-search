@@ -1,6 +1,6 @@
 # TD Quick Search
 
-**English** | [繁體中文](README.zh-TW.md)
+**English** | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md)
 
 A small operator search popup for TouchDesigner. Press a shortcut, type a few
 letters, press Enter.

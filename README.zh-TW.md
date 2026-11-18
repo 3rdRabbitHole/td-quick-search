@@ -1,11 +1,10 @@
 # TD Quick Search
 
-[English](README.md) | **繁體中文**
+[English](README.md) | **繁體中文** | [日本語](README.ja.md)
 
 TouchDesigner 的小型節點搜尋列。按快捷鍵、打幾個字、按 Enter。
 
-同名的節點只佔一列。先找名字,再選家族:有這個節點的家族標籤會亮起,
-切換時只會在亮起的家族之間移動。
+同名的節點只佔一列。先找名字,再選家族:有這個節點的家族標籤會亮起,切換時只會在亮起的家族之間移動。
 
 ![Noise 只佔一列,用 Tab 或方向鍵在有它的家族之間切換](media/switch-family.gif)
 
@@ -43,8 +42,7 @@ TouchDesigner 的小型節點搜尋列。按快捷鍵、打幾個字、按 Enter
 
 ### 搜尋
 
-名稱開頭符合的排最前面,其次是任一單字的開頭、縮寫,最後是名稱中包含輸入文字的。
-接線模式還會把來源家族的節點排在前面(見下方)。
+名稱開頭符合的排最前面,其次是任一單字的開頭、縮寫,最後是名稱中包含輸入文字的。接線模式還會把來源家族的節點排在前面(見下方)。
 
 ![輸入 mov 和 m f i 都能找到 Movie File In](media/search-abbreviation.gif)
 
@@ -61,8 +59,7 @@ Shift+Tab 會以目前節點(綠色外框的那個)作為來源:
 - 它的第一個輸出會接到新節點的第一個輸入
 - 新節點排在它的右邊;那個位置已經有節點時往下排
 - 預設家族與來源節點相同
-- 來源家族也有的節點排在前面:從 LFO CHOP 輸入 `tr`,Trim、Trail、Trigger、Transform
-  會排在 Trig POP 前面。名稱符合的程度仍然優先,其他家族的節點排在後面,不會被篩掉
+- 來源家族也有的節點排在前面:從 LFO CHOP 輸入 `tr`,Trim、Trail、Trigger、Transform 會排在 Trig POP 前面。名稱符合的程度仍然優先,其他家族的節點排在後面,不會被篩掉
 - 新節點會成為目前節點,所以再按一次 Shift+Tab 就能接著往下接,不用去拿滑鼠
 
 選了其他家族的節點時,只會排在來源旁邊,不接線。
@@ -80,31 +77,26 @@ Shift+Tab 會以目前節點(綠色外框的那個)作為來源:
 
 ## 已知限制
 
-- Windows:只在 100% 顯示縮放下測試過。一般模式的節點位置由滑鼠的螢幕座標換算,
-  並假設視窗邊框為 8 像素。
+- Windows:只在 100% 顯示縮放下測試過。一般模式的節點位置由滑鼠的螢幕座標換算,並假設視窗邊框為 8 像素。
 - macOS:只在一台 Mac 上測試過,包含內建 Retina 螢幕和一台外接螢幕。
 - 清單包含所有節點,不會依授權或作業系統過濾。
 - 接線模式只在同一個家族內,把第一個輸出接到第一個輸入,不會自動插入轉換節點。
 
 ## 專案範圍
 
-這個工具打算維持小巧。它只做一件事,而且功能已經算是完成:
-有 bug 會修,但不太會再加新功能。想要更多功能的話,它是 MIT 授權,歡迎 fork 去改。
+這個工具打算維持小巧。它只做一件事,而且功能已經算是完成:有 bug 會修,但不太會再加新功能。想要更多功能的話,它是 MIT 授權,歡迎 fork 去改。
 
 ## 從原始碼建置
 
-`quick_search.tox` 是由 `build_quick_search.py` 和 `QuickSearchExt.py` 產生的。
-要重建的話,在 Textport(Alt+T,或 Dialogs > Textport)執行下面這行,把 `<path>` 換成這個資料夾的路徑:
+`quick_search.tox` 是由 `build_quick_search.py` 和 `QuickSearchExt.py` 產生的。要重建的話,在 Textport(Alt+T,或 Dialogs > Textport)執行下面這行,把 `<path>` 換成這個資料夾的路徑:
 
 ```python
 src = r'<path>'; exec(open(src + '/build_quick_search.py', encoding='utf-8').read())
 ```
 
-這會重建 `/quick_search`,並保留你的快捷鍵設定。在元件上按右鍵選
-*Save Component .tox* 就能存檔。
+這會重建 `/quick_search`,並保留你的快捷鍵設定。在元件上按右鍵選 *Save Component .tox* 就能存檔。
 
-`MIN_CHARS`、`MAX_ROWS` 和接線模式的間距(`GAP_X`、`GAP_Y`)是
-`QuickSearchExt.py` 最上面的常數。
+`MIN_CHARS`、`MAX_ROWS` 和接線模式的間距(`GAP_X`、`GAP_Y`)是 `QuickSearchExt.py` 最上面的常數。
 
 ## 授權
 
