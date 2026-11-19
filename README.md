@@ -76,6 +76,11 @@ Shift+Tab uses the current operator (the one with the green outline) as the sour
 
 Picking an operator from another family places it beside the source without a wire.
 
+Exception: from a SOP or a POP, a Geometry COMP is wired too, because that is how
+geometry usually gets built. Like the built-in OP Create dialog, it gets an In and
+an Out of that family inside in place of its default contents, and typing `geo`
+lists it first.
+
 ![Connect mode with a TOP and a CHOP](media/connect-mode.gif)
 
 ## Settings

@@ -64,6 +64,8 @@ Shift+Tab 會以目前節點(綠色外框的那個)作為來源:
 
 選了其他家族的節點時,只會排在來源旁邊,不接線。
 
+※ 唯一的例外是 Geometry COMP,這是為了配合一般建立幾何體的操作習慣:從 SOP 或 POP 出發時,Geometry COMP 也會接上。它會像原生的 OP Create 選單一樣,把裡面預設的內容換成該家族的 In 和 Out,而且輸入 `geo` 時會排在最前面。
+
 ![對 TOP 和 CHOP 使用接線模式](media/connect-mode.gif)
 
 ## 設定
