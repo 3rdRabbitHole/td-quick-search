@@ -106,6 +106,35 @@ else:
 		return bool(ctypes.windll.user32.GetAsyncKeyState(VK_SHIFT) & 0x8000)
 
 
+# Connect mode wires operators of the same family. The one exception is a
+# Geometry COMP taking a SOP or POP, which is how geometry gets rendered:
+# the new Geometry COMP is given an In and an Out inside, the way the
+# built-in OP Create dialog does it when a SOP or POP wire is dropped.
+GEOMETRY_SOURCES = ('SOP', 'POP')
+
+
+def canWire(sourceFamily, family, cls):
+	"""Whether connect mode wires a new operator (family, class) to a source
+	of sourceFamily."""
+	if family == sourceFamily:
+		return True
+	return sourceFamily in GEOMETRY_SOURCES and cls.__name__ == 'geometryCOMP'
+
+
+def prepareGeometry(geo, family):
+	"""Replace a new Geometry COMP's default contents with an In and an Out
+	of family, so the COMP gets an input to wire to."""
+	for c in list(geo.children):
+		c.destroy()
+	kinds = {c.__name__: c for c in families[family]}
+	inOp = geo.create(kinds['in' + family], 'in1')
+	outOp = geo.create(kinds['out' + family], 'out1')
+	inOp.nodeX, inOp.nodeY = 0, 0
+	outOp.nodeX, outOp.nodeY = 200, 0
+	outOp.inputConnectors[0].connect(inOp)
+	outOp.display = outOp.render = True
+
+
 class QuickSearchExt:
 
 	def __init__(self, ownerComp):
@@ -190,7 +219,8 @@ class QuickSearchExt:
 		for entry in self.index:
 			s = self.score(entry, tokens, compactQuery)
 			if s is not None:
-				other = bool(family) and family not in entry['fams']
+				other = bool(family) and not any(
+					canWire(family, f, cls) for f, cls in entry['fams'].items())
 				found.append((s, other, len(entry['compact']), entry['label'], entry))
 		found.sort(key=lambda t: t[:4])
 		return [t[4] for t in found[:MAX_ROWS]]
@@ -407,9 +437,11 @@ class QuickSearchExt:
 			node.viewer = True
 			source = self.source if self.source and self.source.valid else None
 			if source:
+				wire = canWire(source.family, self.family, cls)
+				if wire and self.family != source.family:
+					prepareGeometry(node, source.family)
 				self.placeBeside(node, source)
-				if (source.family == node.family
-						and source.outputConnectors and node.inputConnectors):
+				if wire and source.outputConnectors and node.inputConnectors:
 					node.inputConnectors[0].connect(source.outputConnectors[0])
 			else:
 				node.nodeCenterX, node.nodeCenterY = self.nodePos
